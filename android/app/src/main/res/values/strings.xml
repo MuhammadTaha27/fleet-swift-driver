@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FleetSwiftDriver</string>
+    <string name="title_activity_main">FleetSwiftDriver</string>
+    <string name="package_name">com.fleetManagementSystem.FleetSwiftDriver</string>
+    <string name="custom_url_scheme">com.fleetManagementSystem.FleetSwiftDriver</string>
+</resources>
