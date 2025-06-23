@@ -4,9 +4,10 @@ import { useEffect } from "react"
 import LoginPage from "./LoginPage"
 import Dashboard from "./Dashboard"
 import PermissionDenied from "./PermissionDenied"
-import { getDriverByUser } from "../services/trips-service"
+import { getCurrentUserDriver } from "../services/driver-service"
 import { useFCM } from "../hooks/useFCM"
 import { removeAuthTokenFromIndexedDB } from "@/utilis/auth-storage"
+import { sendFCMToken, getFCMToken } from "../services/fcm-service"
 
 interface AppContentProps {
   isAuthenticated: boolean
@@ -39,16 +40,42 @@ const AppContent = ({
     isAuthenticated: isAuthenticated && isDriver,
   })
 
-  const fetchDriverData = async (userId: number) => {
+  // Function to handle FCM token retrieval and sending
+  const handleFCMToken = async (driverId: number) => {
+    try {
+      const token = await getFCMToken()
+      if (token) {
+        console.log("Retrieved FCM token:", token)
+        const success = await sendFCMToken(token, driverId)
+        if (success) {
+          console.log("FCM token successfully sent to backend")
+        } else {
+          console.error("Failed to send FCM token to backend")
+        }
+      }
+    } catch (error) {
+      console.error("Error handling FCM token:", error)
+    }
+  }
+
+  // Send FCM token when driverId is available
+  useEffect(() => {
+    if (driverId && isDriver && isAuthenticated) {
+      handleFCMToken(driverId)
+    }
+  }, [driverId, isDriver, isAuthenticated])
+
+  const fetchDriverData = async () => {
     setIsLoading(true)
     try {
-      const response = await getDriverByUser(userId)
-      if (response.driver) {
+      const driver = await getCurrentUserDriver()
+      if (driver) {
         setIsDriver(true)
-        setDriverId(response.driver.id)
+        setDriverId(driver.id)
+        console.log("Driver found:", driver)
       } else {
         setIsDriver(false)
-        console.log("Driver not found for user")
+        console.log("Driver not found for current user")
       }
     } catch (error) {
       console.error("Error fetching driver data:", error)
@@ -61,16 +88,7 @@ const AppContent = ({
   // Fetch driver data on mount if user is authenticated and is a driver role
   useEffect(() => {
     if (isAuthenticated && userRole === "driver" && !driverId) {
-      const userData = localStorage.getItem("user")
-      if (userData) {
-        try {
-          const user = JSON.parse(userData)
-          fetchDriverData(user.id)
-        } catch (error) {
-          console.error("Error parsing user data:", error)
-          setIsLoading(false)
-        }
-      }
+      fetchDriverData()
     }
   }, [isAuthenticated, userRole, driverId])
 
@@ -83,7 +101,7 @@ const AppContent = ({
         setIsAuthenticated(true)
 
         if (user.userRole === "driver") {
-          fetchDriverData(user.id)
+          fetchDriverData()
         }
       } catch (error) {
         console.error("Error parsing user data:", error)

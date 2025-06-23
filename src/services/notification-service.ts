@@ -1,6 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL
 
 export interface NotificationPayload {
+  entityId: number // Add entityId (driver ID)
   fcmFrom: string
   notification: {
     title: string
@@ -11,6 +12,7 @@ export interface NotificationPayload {
 
 export interface BackendNotification {
   id: number
+  entityId: number // Add entityId field
   fcmFrom: string
   title: string
   body: string
@@ -58,8 +60,12 @@ export async function saveNotificationToBackend(payload: NotificationPayload): P
   }
 }
 
-// Fetch notifications from backend
-export async function fetchNotificationsFromBackend(pageNo = 1, rowsPerPage = 20): Promise<NotificationListResponse> {
+// Fetch notifications from backend for a specific driver
+export async function fetchNotificationsFromBackend(
+  entityId: number,
+  pageNo = 1,
+  rowsPerPage = 20,
+): Promise<NotificationListResponse> {
   try {
     const token = localStorage.getItem("authToken")
     if (!token) {
@@ -72,7 +78,7 @@ export async function fetchNotificationsFromBackend(pageNo = 1, rowsPerPage = 20
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ pageNo, rowsPerPage }),
+      body: JSON.stringify({ entityId, pageNo, rowsPerPage }),
     })
 
     if (!response.ok) {

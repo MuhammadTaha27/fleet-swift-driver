@@ -26,6 +26,12 @@ export interface Driver {
   // Add other driver fields as needed
 }
 
+export interface CustomerLocation {
+  latitude: string
+  longitude: string
+  mapLink: string
+}
+
 export interface DriverResponse {
   message?: string
   driver?: Driver
@@ -42,6 +48,7 @@ export interface Trip {
   assignedTruck: Truck
   assignedDriverId: number
   tripStatus: string
+  customerLocation?: CustomerLocation
 }
 
 export interface TripsByDriverResponse {

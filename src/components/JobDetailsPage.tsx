@@ -15,7 +15,7 @@ import {
   type Trip,
 } from "../services/trips-service"
 import type { UploadResult } from "../services/upload-service"
-import { MapPin, Calendar, Package, User, Truck, Hash, DollarSign } from "lucide-react"
+import { MapPin, Calendar, Package, User, Truck, Hash, DollarSign, ExternalLink, Navigation } from "lucide-react"
 import { useToast } from "../hooks/use-toast"
 
 interface JobDetailsPageProps {
@@ -75,7 +75,7 @@ const JobDetailsPage = ({ jobId, driverId }: JobDetailsPageProps) => {
     setProcessingStatus(true)
     try {
       await markTripAsReachedDestination(trip.id)
-      setJobStatus("reached_destination")
+      setJobStatus("reached-destination")
       toast({
         title: "Success",
         description: "Trip marked as reached destination",
@@ -160,7 +160,7 @@ const JobDetailsPage = ({ jobId, driverId }: JobDetailsPageProps) => {
         return "text-orange-600 bg-orange-100"
       case "loaded":
         return "text-blue-600 bg-blue-100"
-      case "reached_destination":
+      case "reached-destination":
         return "text-purple-600 bg-purple-100"
       case "completed":
         return "text-green-600 bg-green-100"
@@ -181,6 +181,10 @@ const JobDetailsPage = ({ jobId, driverId }: JobDetailsPageProps) => {
     } catch {
       return dateString
     }
+  }
+
+  const handleMapLinkClick = (mapLink: string) => {
+    window.open(mapLink, "_blank", "noopener,noreferrer")
   }
 
   const renderActionButton = () => {
@@ -216,7 +220,7 @@ const JobDetailsPage = ({ jobId, driverId }: JobDetailsPageProps) => {
             {processingStatus ? "Processing..." : t("reachedDestination")}
           </Button>
         )
-      case "reached_destination":
+      case "reached-destination":
         return (
           <Button
             onClick={handleUnloadButton}
@@ -282,7 +286,7 @@ const JobDetailsPage = ({ jobId, driverId }: JobDetailsPageProps) => {
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(jobStatus)}`}>
               {jobStatus === "assigned" && t("assigned")}
               {jobStatus === "loaded" && t("loaded")}
-              {jobStatus === "reached_destination" && t("reachedDestination")}
+              {jobStatus === "reached-destination" && t("reachedDestination")}
               {jobStatus === "completed" && "Completed"}
             </span>
           </div>
@@ -314,6 +318,21 @@ const JobDetailsPage = ({ jobId, driverId }: JobDetailsPageProps) => {
               <span className="ml-2 text-gray-600">{trip.deliveryLocation.locationName}</span>
             </div>
 
+            {/* Customer Location with Map Link */}
+            {trip.customerLocation && (
+              <div className="flex items-center">
+                <Navigation className="w-4 h-4 mr-2 text-gray-400" />
+                <span className="font-medium text-gray-700">Customer Location:</span>
+                <button
+                  onClick={() => handleMapLinkClick(trip.customerLocation!.mapLink)}
+                  className="ml-2 text-blue-600 hover:text-blue-800 underline flex items-center transition-colors"
+                >
+                  <span className="text-sm">View on Map</span>
+                  <ExternalLink className="w-3 h-3 ml-1" />
+                </button>
+              </div>
+            )}
+
             <div className="flex items-center">
               <Truck className="w-4 h-4 mr-2 text-gray-400" />
               <span className="font-medium text-gray-700">Truck:</span>
@@ -333,6 +352,16 @@ const JobDetailsPage = ({ jobId, driverId }: JobDetailsPageProps) => {
                 <span className="ml-2 text-gray-600">{trip.rate}</span>
               </div>
             )}
+
+            {/* Customer Location Coordinates (optional, for reference) 
+            {trip.customerLocation && (
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <div className="text-xs text-gray-500 mb-1">Coordinates:</div>
+                <div className="text-sm text-gray-600">
+                  Lat: {trip.customerLocation.latitude}, Lng: {trip.customerLocation.longitude}
+                </div>
+              </div>
+            )}*/}
           </div>
         </CardContent>
       </Card>

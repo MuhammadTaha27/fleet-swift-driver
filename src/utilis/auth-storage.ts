@@ -1,7 +1,7 @@
 // Utility to store auth token in IndexedDB for service worker access
 export const storeAuthTokenInIndexedDB = async (token: string): Promise<void> => {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open("authStorage", 1)
+      const request = indexedDB.open("authStorage", 2)
   
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result
@@ -34,7 +34,7 @@ export const storeAuthTokenInIndexedDB = async (token: string): Promise<void> =>
   
   export const removeAuthTokenFromIndexedDB = async (): Promise<void> => {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open("authStorage", 1)
+      const request = indexedDB.open("authStorage", 2)
   
       request.onsuccess = (event) => {
         const db = (event.target as IDBOpenDBRequest).result

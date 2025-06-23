@@ -81,7 +81,7 @@ const Dashboard = ({ onLogout, driverId }: DashboardProps) => {
 
       {/* Content */}
       <div className="flex-1">
-        {currentPage === "notifications" && <NotificationsPage />}
+        {currentPage === "notifications" && <NotificationsPage driverId={driverId} />}
         {currentPage === "jobs" && <JobsPage onJobSelect={navigateToJobDetails} driverId={driverId} />}
         {currentPage === "jobDetails" && selectedJobId && <JobDetailsPage jobId={selectedJobId} driverId={driverId} />}
       </div>

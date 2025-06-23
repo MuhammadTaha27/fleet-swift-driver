@@ -26,7 +26,9 @@ interface NotificationContextType {
   notifications: NotificationData[]
   backendNotifications: BackendNotification[]
   addNotification: (notification: Omit<NotificationData, "id" | "timestamp" | "isRead">) => void
-  setBackendNotifications: (notifications: BackendNotification[]) => void
+  setBackendNotifications: (
+    notifications: BackendNotification[] | ((prev: BackendNotification[]) => BackendNotification[]),
+  ) => void
   markAsRead: (id: string) => void
   clearNotifications: () => void
   refreshNotifications: () => void
@@ -48,7 +50,7 @@ interface NotificationProviderProps {
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
   const [notifications, setNotifications] = useState<NotificationData[]>([])
-  const [backendNotifications, setBackendNotifications] = useState<BackendNotification[]>([])
+  const [backendNotifications, setBackendNotificationsState] = useState<BackendNotification[]>([])
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   const addNotification = (notification: Omit<NotificationData, "id" | "timestamp" | "isRead">) => {
@@ -60,6 +62,16 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
 
     setNotifications((prev) => [newNotification, ...prev])
+  }
+
+  const setBackendNotifications = (
+    notifications: BackendNotification[] | ((prev: BackendNotification[]) => BackendNotification[]),
+  ) => {
+    if (typeof notifications === "function") {
+      setBackendNotificationsState(notifications)
+    } else {
+      setBackendNotificationsState(notifications)
+    }
   }
 
   const markAsRead = (id: string) => {

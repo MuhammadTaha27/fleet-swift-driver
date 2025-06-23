@@ -1,5 +1,6 @@
 import { messaging, getToken, onMessage, VAPID_KEY } from "./firebase"
 import { saveNotificationToBackend, type NotificationPayload } from "./notification-service"
+import { getCurrentUserDriverId } from "./driver-service"
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL
 
@@ -79,6 +80,16 @@ export const sendFCMToken = async (token: string, driverId: number) => {
 
     if (response.ok) {
       console.log(`Successfully sent FCM token`)
+
+      // Also send driver ID to service worker for background notifications
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready
+        registration.active?.postMessage({
+          type: "DRIVER_ID",
+          driverId: driverId,
+        })
+      }
+
       return true
     } else {
       console.error("Failed to send FCM token")
@@ -90,21 +101,33 @@ export const sendFCMToken = async (token: string, driverId: number) => {
   }
 }
 
-export const setupMessageListener = (onMessageReceived: (payload: any) => void) => {
+export const setupMessageListener = (onMessageReceived: (payload: any) => void, driverId?: number) => {
   onMessage(messaging, async (payload) => {
     console.log("Message received in foreground: ", payload)
 
-    // Save notification to backend
-    const notificationPayload: NotificationPayload = {
-      fcmFrom: payload.from || "firebase",
-      notification: {
-        title: payload.notification?.title || "New Notification",
-        body: payload.notification?.body || "You have a new notification",
-      },
-      data: payload.data || {},
+    // Save notification to backend with driver ID
+    let entityId = driverId
+
+    // If driverId is not provided, try to get it from the current user
+    if (!entityId) {
+      entityId = await getCurrentUserDriverId()
     }
 
-    await saveNotificationToBackend(notificationPayload)
+    if (entityId) {
+      const notificationPayload: NotificationPayload = {
+        entityId: entityId, // Use driver ID as entity ID
+        fcmFrom: payload.from || "firebase",
+        notification: {
+          title: payload.notification?.title || "New Notification",
+          body: payload.notification?.body || "You have a new notification",
+        },
+        data: payload.data || {},
+      }
+
+      await saveNotificationToBackend(notificationPayload)
+    } else {
+      console.warn("Could not determine driver ID for notification saving")
+    }
 
     // Call the original callback
     onMessageReceived(payload)
